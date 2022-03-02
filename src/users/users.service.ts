@@ -1,13 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { users, Prisma } from '@prisma/client'
-import { response } from 'express';
+import { users, Prisma } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
     constructor(private prisma: PrismaService) { }
     
     async createUser(data) {
+
         return this.prisma.users.create({
             data
         })
