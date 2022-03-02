@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Request, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Prisma } from '@prisma/client'
 import { AuthGuard } from '@nestjs/passport';
@@ -10,16 +10,22 @@ export class UsersController {
   
   @Get()
   @UseGuards(AuthGuard('jwt'))
-
   findAll() {
     return this.usersService.getAll();
   }
+  
+  @Get('/auth_user')
+  @UseGuards(AuthGuard('jwt'))
+  authUser(@Request() req: any) {
+    return this.usersService.authUser(req.user.id);
+  }
+
   @UseGuards(AuthGuard('jwt'))
   @Post()
   create( @Body() data:Prisma.usersCreateInput) {
     return this.usersService.createUser(data)
   }
-
+  
   @UseGuards(AuthGuard('jwt'))
   @Put(':id')
   updateUser(@Param('id') id: string, @Body() data:Prisma.usersUpdateInput) {

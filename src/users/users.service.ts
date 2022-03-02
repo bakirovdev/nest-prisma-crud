@@ -7,8 +7,7 @@ import * as bcrypt from 'bcrypt';
 export class UsersService {
     constructor(private prisma: PrismaService) { }
     
-    async createUser(data) {
-
+    async createUser(data:Prisma.usersCreateInput) {
         return this.prisma.users.create({
             data
         })
@@ -19,6 +18,11 @@ export class UsersService {
     }
     async getOneById() {
         return this.prisma.users.findFirst()
+    }
+    async authUser(id: number) {
+        return this.prisma.users.findFirst({
+            select: {id:true, username:true, full_name:true, phone_number:true}
+        })
     }
     
     async updateUser(data:Prisma.usersUpdateInput , id: number) {
