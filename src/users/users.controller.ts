@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put, Request, UseGuards } f
 import { UsersService } from './users.service';
 import { Prisma } from '@prisma/client'
 import { AuthGuard } from '@nestjs/passport';
+import { CreateUserDto, UpdateUserDto } from './dto';
 
 
 @Controller('users')
@@ -22,13 +23,13 @@ export class UsersController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post()
-  create( @Body() data:Prisma.usersCreateInput) {
+  create( @Body() data:CreateUserDto) {
     return this.usersService.createUser(data)
   }
   
   @UseGuards(AuthGuard('jwt'))
   @Put(':id')
-  updateUser(@Param('id') id: string, @Body() data:Prisma.usersUpdateInput) {
+  updateUser(@Param('id') id: string, @Body() data:UpdateUserDto) {
     return this.usersService.updateUser(data, +id);
   }
 

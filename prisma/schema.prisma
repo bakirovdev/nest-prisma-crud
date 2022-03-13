@@ -10,10 +10,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model users{
-  id  Int @default(autoincrement()) @id
-  username String @unique
-  full_name String
-  password String
+model User {
+  id           Int     @id @default(autoincrement())
+  username     String  @unique
+  full_name    String
+  password     String
   phone_number String?
+  city_id      Int?
+  city         City?   @relation(fields: [city_id], references: [id])
+
+  @@map("users")
+}
+
+model City {
+  id     Int     @id @default(autoincrement())
+  title  String
+  active Boolean @default(true)
+  User   User[]
+
+  @@map("cities")
 }

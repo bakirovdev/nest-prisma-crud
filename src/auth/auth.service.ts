@@ -8,8 +8,8 @@ import * as bcrypt from 'bcrypt';
 export class AuthService {
   constructor(private jwtService: JwtService, private prisma: PrismaService){}
   async authenticate(authDto: AuthDto) {
-    if (process.env.NODE_SECRET !== authDto.client_secret) throw new UnauthorizedException('User does not exist!');
-    const user = await this.prisma.users.findFirst({
+    if (process.env.APP_NEST_SECRET !== authDto.client_secret) throw new UnauthorizedException('User does not exist!');
+    const user = await this.prisma.user.findFirst({
       where: {username: authDto.username}
     })
     if (!user) throw new UnauthorizedException('User does not exist');
