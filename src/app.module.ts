@@ -6,6 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { JwtStrategy } from './auth/strategy/jwt.strategy';
 import { JwtModule } from '@nestjs/jwt';
+import { CitiesModule } from './cities/cities.module';
 
 
 @Module({
@@ -21,6 +22,7 @@ import { JwtModule } from '@nestjs/jwt';
       envFilePath: '.env'
     }),
     AuthModule,
+    CitiesModule,
   ],
   controllers: [AppController],
   providers: [AppService, JwtStrategy],
