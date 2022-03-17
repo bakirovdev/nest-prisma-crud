@@ -2,7 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["referentialActions"]
 }
 
 datasource db {
@@ -17,7 +18,7 @@ model User {
   password     String
   phone_number String?
   city_id      Int?
-  city         City?   @relation(fields: [city_id], references: [id])
+  city         City?   @relation(fields: [city_id], references: [id], onDelete: Cascade)
 
   @@map("users")
 }
@@ -29,4 +30,61 @@ model City {
   User   User[]
 
   @@map("cities")
+}
+
+model Student {
+  id           Int      @id @default(autoincrement())
+  first_name   String
+  last_name    String
+  phone_number String
+  status       String
+  birthday     DateTime
+  course_id    Int?
+  week_id      Int?
+  time_id      Int?
+  region_id    Int?
+  gender_id    Int
+  Course       Course?  @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  Weak         Weak?    @relation(fields: [week_id], references: [id], onDelete: Cascade)
+  Time         Time?      @relation(fields: [time_id], references: [id], onDelete: Cascade)
+  Region       Region?      @relation(fields: [region_id], references: [id], onDelete: Cascade)
+
+  @@map("students")
+}
+
+model Course {
+  id      Int       @id @default(autoincrement())
+  title   String
+  active  Boolean   @default(true)
+  Student Student[]
+
+  @@map("courses")
+}
+
+model Weak {
+  id        Int       @id @default(autoincrement())
+  weak_name String
+  active    Boolean   @default(true)
+  Student   Student[]
+
+  @@map("weaks")
+}
+
+model Time {
+  id         Int       @id @default(autoincrement())
+  start_time String
+  end_time   String
+  active     Boolean   @default(true)
+  Student    Student[]
+
+  @@map("times")
+}
+
+model Region {
+  id     Int     @id @default(autoincrement())
+  title  String
+  active Boolean @default(true)
+
+  Student Student[]
+  @@map("regions")
 }
