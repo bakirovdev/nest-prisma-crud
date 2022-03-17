@@ -7,6 +7,11 @@ import { AuthModule } from './auth/auth.module';
 import { JwtStrategy } from './auth/strategy/jwt.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { CitiesModule } from './cities/cities.module';
+import { StudentsModule } from './students/students.module';
+import { CoursesModule } from './courses/courses.module';
+import { WeaksModule } from './weaks/weaks.module';
+import { TimesModule } from './times/times.module';
+import { RegionsModule } from './regions/regions.module';
 
 
 @Module({
@@ -23,6 +28,11 @@ import { CitiesModule } from './cities/cities.module';
     }),
     AuthModule,
     CitiesModule,
+    StudentsModule,
+    CoursesModule,
+    WeaksModule,
+    TimesModule,
+    RegionsModule,
   ],
   controllers: [AppController],
   providers: [AppService, JwtStrategy],
