@@ -6,7 +6,12 @@ import { UpdateRegionDto } from './dto/update-region.dto';
 @Controller('regions')
 export class RegionsController {
   constructor(private readonly regionsService: RegionsService) {}
-
+    
+  @Get('/active_region')
+  findAllForAutocomplate() {
+    return this.regionsService.getForAutocomplate();
+  }
+  
   @Post('/')
   create(@Body() createRegionDto: CreateRegionDto) {
     return this.regionsService.create(createRegionDto);
@@ -31,4 +36,5 @@ export class RegionsController {
   remove(@Param('id') id: string) {
     return this.regionsService.remove(+id);
   }
+
 }

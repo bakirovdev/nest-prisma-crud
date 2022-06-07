@@ -6,13 +6,11 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { JwtStrategy } from './auth/strategy/jwt.strategy';
 import { JwtModule } from '@nestjs/jwt';
-import { CitiesModule } from './cities/cities.module';
 import { StudentsModule } from './students/students.module';
 import { CoursesModule } from './courses/courses.module';
-import { WeaksModule } from './weaks/weaks.module';
 import { TimesModule } from './times/times.module';
 import { RegionsModule } from './regions/regions.module';
-
+import { GroupsModule } from './groups/groups.module';
 
 @Module({
   imports: [
@@ -27,12 +25,11 @@ import { RegionsModule } from './regions/regions.module';
       envFilePath: '.env'
     }),
     AuthModule,
-    CitiesModule,
     StudentsModule,
     CoursesModule,
-    WeaksModule,
     TimesModule,
     RegionsModule,
+    GroupsModule,
   ],
   controllers: [AppController],
   providers: [AppService, JwtStrategy],

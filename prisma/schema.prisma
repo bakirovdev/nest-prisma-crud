@@ -3,7 +3,8 @@
 
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["referentialActions"]
+  previewFeatures = ["referentialActions", "fullTextIndex"]
+  binaryTargets   = ["native", "debian-openssl-1.1.x"]
 }
 
 datasource db {
@@ -11,80 +12,127 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Status {
+  waiting
+  confirmed
+  canceled
+}
+
 model User {
-  id           Int     @id @default(autoincrement())
-  username     String  @unique
+  id           Int       @id @default(autoincrement())
+  username     String    @unique
   full_name    String
   password     String
   phone_number String?
-  city_id      Int?
-  city         City?   @relation(fields: [city_id], references: [id], onDelete: Cascade)
+  created_at   DateTime? @default(now())
+  update_at    DateTime? @updatedAt
 
   @@map("users")
 }
 
-model City {
-  id     Int     @id @default(autoincrement())
-  title  String
-  active Boolean @default(true)
-  User   User[]
-
-  @@map("cities")
-}
-
 model Student {
-  id           Int      @id @default(autoincrement())
+  id           Int              @id @default(autoincrement())
   first_name   String
   last_name    String
   phone_number String
-  status       String
+  status       Status           @default(waiting)
   birthday     DateTime
-  course_id    Int?
-  week_id      Int?
-  time_id      Int?
   region_id    Int?
-  gender_id    Int
-  Course       Course?  @relation(fields: [course_id], references: [id], onDelete: Cascade)
-  Weak         Weak?    @relation(fields: [week_id], references: [id], onDelete: Cascade)
-  Time         Time?      @relation(fields: [time_id], references: [id], onDelete: Cascade)
-  Region       Region?      @relation(fields: [region_id], references: [id], onDelete: Cascade)
+  gender_id    Int?
+  created_at   DateTime?        @default(now())
+  updated_at   DateTime?        @updatedAt
+  course       StudentCourses[]
+  Region       Region?          @relation(fields: [region_id], references: [id], onDelete: SetNull)
+  Gender       Gender?          @relation(fields: [gender_id], references: [id], onDelete: SetNull)
 
+
+  @@fulltext([first_name, last_name])
   @@map("students")
 }
 
-model Course {
-  id      Int       @id @default(autoincrement())
-  title   String
-  active  Boolean   @default(true)
-  Student Student[]
+model StudentCourses {
+  id         Int       @default(autoincrement())
+  student_id Int
+  course_id  Int
+  active     Boolean   @default(true)
+  created_at DateTime? @default(now())
+  update_at  DateTime? @updatedAt
+  Student    Student   @relation(fields: [student_id], references: [id])
+  Course     Course    @relation(fields: [course_id], references: [id])
 
-  @@map("courses")
+  @@id([id, student_id, course_id])
+  @@map("student_courses")
 }
 
-model Weak {
-  id        Int       @id @default(autoincrement())
-  weak_name String
-  active    Boolean   @default(true)
-  Student   Student[]
+model Course {
+  id         Int              @id @default(autoincrement())
+  title      String
+  active     Boolean          @default(true)
+  created_at DateTime?        @default(now())
+  update_at  DateTime?        @updatedAt
+  students   StudentCourses[]
 
-  @@map("weaks")
+  @@map("courses")
+  Group Group[]
 }
 
 model Time {
   id         Int       @id @default(autoincrement())
+  week       String
   start_time String
   end_time   String
+  created_at DateTime? @default(now())
+  update_at  DateTime? @updatedAt
   active     Boolean   @default(true)
-  Student    Student[]
 
+
+  GroupLessonTime GroupLessonTime[]
   @@map("times")
 }
 
 model Region {
-  id     Int     @id @default(autoincrement())
-  title  String
-  active Boolean @default(true)
+  id         Int       @id @default(autoincrement())
+  title      String
+  active     Boolean   @default(true)
+  created_at DateTime? @default(now())
+  update_at  DateTime? @updatedAt
+  Student    Student[]
 
-  Student Student[]
   @@map("regions")
+}
+
+model Gender {
+  id         Int       @id @default(autoincrement())
+  title      String
+  active     Boolean   @default(true)
+  created_at DateTime? @default(now())
+  update_at  DateTime? @updatedAt
+  Student    Student[]
+
+  @@map("genders")
+}
+
+model Group {
+  id              Int              @id @default(autoincrement())
+  title           String
+  course_id       Int
+  active          Boolean           @default(true)
+  created_at      DateTime?         @default(now())
+  update_at       DateTime?         @updatedAt
+  Course          Course            @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  GroupLessonTime GroupLessonTime[]
+
+  @@map("groups")
+}
+
+model GroupLessonTime {
+  id       Int     @default(autoincrement())
+  group_id Int
+  time_id  Int
+  active   Boolean @default(true)
+  Time     Time    @relation(fields: [time_id], references: [id])
+  Group    Group   @relation(fields: [group_id], references: [id])
+
+  @@id([id, group_id, time_id])
+  @@map("group_lesson_times")
 }

@@ -3,6 +3,4 @@ export class CreateUserDto {
     password: string
     full_name: string;
     phone_number?: string;
-    city_id?: number;
-
 }
