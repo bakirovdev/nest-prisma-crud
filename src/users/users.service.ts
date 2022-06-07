@@ -17,7 +17,6 @@ export class UsersService {
                     full_name: data.full_name,
                     password: data.password,
                     phone_number: data.phone_number || null,
-                    city_id: data.city_id ?? null
                 }
             });
             const newUser = this.prisma.user.findFirst({
@@ -26,12 +25,6 @@ export class UsersService {
                     id: true,
                     full_name: true,
                     phone_number: true,
-                    city: {
-                        select: {
-                            id: true,
-                            title: true
-                        }
-                    }
                 }
             })
             return newUser;
@@ -46,13 +39,6 @@ export class UsersService {
                 id: true,
                 full_name: true,
                 phone_number: true,
-                city: {
-                    select: {
-                        id: true,
-                        title: true
-                    }
-                }
-
             }
         })
         return users
@@ -78,7 +64,6 @@ export class UsersService {
                     full_name: data.full_name,
                     phone_number: data.phone_number || oldUser.phone_number,
                     password: data.password || oldUser.password,
-                    city_id: data.city_id || oldUser.city_id
                 },
                 where: { id },
 

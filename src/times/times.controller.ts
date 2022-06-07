@@ -23,8 +23,8 @@ export class TimesController {
   }
 
   @Patch('/:id')
-  update(@Param('id') id: string, @Body() updateTimeDto: UpdateTimeDto) {
-    return this.timesService.update(+id, updateTimeDto);
+  async update(@Param('id') id: string, @Body() updateTimeDto: UpdateTimeDto) {
+    return await this.timesService.update(+id, updateTimeDto);
   }
 
   @Delete('/:id')

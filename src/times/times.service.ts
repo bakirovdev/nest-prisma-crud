@@ -6,10 +6,12 @@ import { UpdateTimeDto } from './dto/update-time.dto';
 @Injectable()
 export class TimesService {
   constructor(private prisma: PrismaService) { }
-  create(createTimeDto: CreateTimeDto) {
-    const time = this.prisma.time.create({
-      data:createTimeDto
+  async create(createTimeDto: CreateTimeDto) {
+    const data = createTimeDto;
+    const time = await this.prisma.time.create({
+      data
     });
+    return {data:time}
   }
 
   async findAll() {
@@ -24,8 +26,8 @@ export class TimesService {
     return times;
   }
 
-  update(id: number, updateTimeDto: UpdateTimeDto) {
-    this.prisma.time.update({
+  async update(id: number, updateTimeDto: UpdateTimeDto) {
+    await this.prisma.time.update({
       where: { id },
       data:updateTimeDto
     });
