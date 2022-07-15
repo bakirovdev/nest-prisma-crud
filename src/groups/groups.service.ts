@@ -12,7 +12,9 @@ export class GroupsService {
       const group = await this.prisma.group.create({
         data: {
           title: createGroupDto.title,
-          course_id: createGroupDto.course_id
+          Course:{
+            connect:{id: createGroupDto.course_id}
+          }
         }
       })
       const timeId = createGroupDto.times;
@@ -51,6 +53,9 @@ export class GroupsService {
         },
         include: {
           GroupLessonTime: {
+              where: {
+                active: true
+              },
               include:{Time: true}
           },
           Course: true
@@ -70,14 +75,54 @@ export class GroupsService {
 
   async update(id: number, updateGroupDto: UpdateGroupDto) {
     try {
-      await this.prisma.group.update({
-        data: {
-          title: updateGroupDto.title,
-          course_id: updateGroupDto.course_id
-        },
-        where: { id: id }
+      return await this.prisma.$transaction(async (prisma) =>{
+        await prisma.group.update({
+          where: { id: id },
+          data: {
+            title: updateGroupDto.title,
+            course_id: updateGroupDto.course_id
+          }
+        })
+        let haveTimes = await prisma.groupLessonTime.findMany({
+          where:{
+            group_id: id,
+            active: true,
+            time_id:{
+              in: updateGroupDto.times
+            }
+          }
+        })
+        let have_times: number[]
+        have_times = []
+        haveTimes.map((el)=>{
+          have_times.push(el.time_id)
+        });
+        await prisma.groupLessonTime.updateMany({
+          where:{
+            group_id: id, 
+            Time:{
+              id:{
+                notIn: have_times
+              }
+            }
+          },
+          data:{
+            active:false
+          }
+        })
+        let mustCreate = this.array_diff(have_times, updateGroupDto.times);
+        let data = [];
+        mustCreate.map((el) => {
+          data.push({
+            group_id: id,
+            time_id: +el
+          })
+        })
+        await prisma.groupLessonTime.createMany({
+          data
+        })
+        return {message: 'Group just has updated'}
       })
-      return {message: 'The group just has updated'}
     } catch (error) {
       throw new HttpException(error.message, 400)
     }
@@ -85,5 +130,35 @@ export class GroupsService {
 
   remove(id: number) {
     return `This action removes a #${id} group`;
+  }
+  async groupLessonTime(id:number){
+    const groupLessonTime = await this.prisma.groupLessonTime.findMany({
+      where:{
+        group_id: id
+      },
+      include:{
+        Time:true
+      }
+    })
+    return {data:groupLessonTime||[]};
+  }
+  array_diff(arr1:string[] | number[], arr2:string[] | number[]){
+    let arr = [], diff = [];
+    for (let i = 0; i < arr1.length; i++) {
+      arr[arr1[i]] = true
+    }
+
+    for (let i = 0; i < arr2.length; i++) {
+      if (arr[arr2[i]]) {
+        delete arr[arr2[i]]
+      } else {
+        arr[arr2[i]] = true
+      }
+    }
+
+    for (let k in arr) {
+      diff.push(k)
+    }
+    return diff
   }
 }

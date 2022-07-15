@@ -25,6 +25,11 @@ export class GroupsController {
     return this.groupsService.findOne(+id);
   }
 
+  @Get('/lesson_time/:id')
+  groupLessonTime(@Param('id') id:string|number){
+    return this.groupsService.groupLessonTime(+id);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateGroupDto: UpdateGroupDto) {
     return this.groupsService.update(+id, updateGroupDto);
