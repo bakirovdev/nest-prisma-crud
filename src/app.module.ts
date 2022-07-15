@@ -11,6 +11,7 @@ import { CoursesModule } from './courses/courses.module';
 import { TimesModule } from './times/times.module';
 import { RegionsModule } from './regions/regions.module';
 import { GroupsModule } from './groups/groups.module';
+import { GroupStudentModule } from './group-student/group-student.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { GroupsModule } from './groups/groups.module';
     TimesModule,
     RegionsModule,
     GroupsModule,
+    GroupStudentModule,
   ],
   controllers: [AppController],
   providers: [AppService, JwtStrategy],

@@ -3,7 +3,7 @@
 
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["referentialActions", "fullTextIndex"]
+  previewFeatures = ["fullTextIndex", "interactiveTransactions"]
   binaryTargets   = ["native", "debian-openssl-1.1.x"]
 }
 
@@ -19,13 +19,15 @@ enum Status {
 }
 
 model User {
-  id           Int       @id @default(autoincrement())
-  username     String    @unique
-  full_name    String
-  password     String
-  phone_number String?
-  created_at   DateTime? @default(now())
-  update_at    DateTime? @updatedAt
+  id            Int       @id @default(autoincrement())
+  username      String    @unique
+  full_name     String
+  password      String
+  phone_number  String?
+  created_at    DateTime? @default(now())
+  update_at     DateTime? @updatedAt
+  CreatedLesson Lesson[]
+  GroupTeacher  GroupTeacher[]
 
   @@map("users")
 }
@@ -42,9 +44,12 @@ model Student {
   created_at   DateTime?        @default(now())
   updated_at   DateTime?        @updatedAt
   course       StudentCourses[]
+  GroupStudent GroupStudent[]
+  Attendences  Attendence[]
   Region       Region?          @relation(fields: [region_id], references: [id], onDelete: SetNull)
   Gender       Gender?          @relation(fields: [gender_id], references: [id], onDelete: SetNull)
-
+  StudentMoney StudentMoney?
+  StudentDebit StudentDebit[]
 
   @@fulltext([first_name, last_name])
   @@map("students")
@@ -72,8 +77,8 @@ model Course {
   update_at  DateTime?        @updatedAt
   students   StudentCourses[]
 
-  @@map("courses")
   Group Group[]
+  @@map("courses")
 }
 
 model Time {
@@ -87,6 +92,7 @@ model Time {
 
 
   GroupLessonTime GroupLessonTime[]
+  Attendence      Attendence[]
   @@map("times")
 }
 
@@ -113,7 +119,7 @@ model Gender {
 }
 
 model Group {
-  id              Int              @id @default(autoincrement())
+  id              Int               @id @default(autoincrement())
   title           String
   course_id       Int
   active          Boolean           @default(true)
@@ -121,18 +127,139 @@ model Group {
   update_at       DateTime?         @updatedAt
   Course          Course            @relation(fields: [course_id], references: [id], onDelete: Cascade)
   GroupLessonTime GroupLessonTime[]
+  GroupStudent    GroupStudent[]
+  Lesson          Lesson[]
+  Attendence      Attendence[]
+  GroupPrice      GroupPrice[]
+  StudentDebit    StudentDebit[]
+  GroupTeacher    GroupTeacher[]
 
   @@map("groups")
 }
 
+model GroupPrice {
+  id            Int       @unique @default(autoincrement())
+  group_id      Int
+  monthly_price Float
+  daily_price   Float
+  active        Boolean   @default(true)
+  created_at    DateTime? @default(now())
+  updated_at    DateTime? @updatedAt
+
+  Group Group @relation(fields: [group_id], references: [id])
+  @@id([id, group_id])
+  @@map("group_prices")
+}
+
 model GroupLessonTime {
-  id       Int     @default(autoincrement())
-  group_id Int
-  time_id  Int
-  active   Boolean @default(true)
-  Time     Time    @relation(fields: [time_id], references: [id])
-  Group    Group   @relation(fields: [group_id], references: [id])
+  id         Int       @default(autoincrement())
+  group_id   Int
+  time_id    Int
+  active     Boolean   @default(true)
+  created_at DateTime? @default(now())
+  update_at  DateTime? @updatedAt
+
+  Time  Time  @relation(fields: [time_id], references: [id])
+  Group Group @relation(fields: [group_id], references: [id])
 
   @@id([id, group_id, time_id])
   @@map("group_lesson_times")
+}
+
+model GroupStudent {
+  id         Int       @default(autoincrement())
+  group_id   Int
+  student_id Int
+  bonus      Float     @default(0)
+  active     Boolean   @default(true)
+  start_date DateTime  @default(now())
+  end_date   DateTime?
+  created_at DateTime? @default(now())
+  update_at  DateTime? @updatedAt
+
+  Student Student @relation(fields: [student_id], references: [id])
+  Group   Group   @relation(fields: [group_id], references: [id])
+  @@id([id, group_id, student_id])
+  @@map("group_students")
+}
+
+model Lesson {
+  id        Int      @unique @default(autoincrement())
+  group_id  Int
+  user_id   Int
+  date_time DateTime
+  active    Boolean  @default(true)
+  month     Int
+  year      Int
+
+  Attendence Attendence[]
+  Group      Group        @relation(fields: [group_id], references: [id])
+  User       User?        @relation(fields: [user_id], references: [id])
+  StudentDebit StudentDebit[]
+
+  @@id([id, group_id, user_id])
+  @@map("lessons")
+}
+
+model Attendence {
+  id         Int     @default(autoincrement())
+  group_id   Int
+  lesson_id  Int
+  time_id    Int
+  student_id Int
+  active     Boolean @default(true)
+  attended   Boolean @default(true)
+  cash       Boolean @default(true)
+
+  Group   Group   @relation(fields: [group_id], references: [id])
+  Student Student @relation(fields: [student_id], references: [id])
+  Lesson  Lesson  @relation(fields: [lesson_id], references: [id])
+  Time    Time    @relation(fields: [time_id], references: [id])
+  @@id([id, group_id, lesson_id, time_id, student_id])
+  @@map("attendences")
+}
+
+model StudentMoney {
+  id         Int      @default(autoincrement())
+  student_id Int    @unique
+  value      Float    @default(0)
+  active     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  Student Student @relation(fields: [student_id], references: [id])
+  @@id([id, student_id])
+  @@map("student_money")
+}
+
+model StudentDebit {
+  id Int @default(autoincrement())
+  student_id Int
+  group_id Int
+  value Float
+  lesson_id Int?
+  month Int?
+  active  Boolean @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  Group   Group   @relation(fields: [group_id], references: [id])
+  Student Student @relation(fields: [student_id], references: [id])
+  Lesson  Lesson?  @relation(fields: [lesson_id], references: [id])
+  @@id([id, student_id, group_id])
+  @@map("student_debits")
+}
+
+model GroupTeacher {
+  id Int @default(autoincrement())
+  user_id Int
+  group_id Int
+  active Boolean @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  User User @relation(fields: [user_id], references: [id])
+  Group Group @relation(fields: [group_id], references: [id])
+  @@id([id, user_id, group_id])
+  @@map("group_teachers")
 }

@@ -6,9 +6,9 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 @Injectable()
 export class CoursesService {
   constructor(private prisma: PrismaService){}
-  create(creatCourseDto: CreateCourseDto) {
+  create(createCourseDto: CreateCourseDto) {
     const course = this.prisma.course.create({
-      data:creatCourseDto
+      data:createCourseDto
     });
     return course;
   }
