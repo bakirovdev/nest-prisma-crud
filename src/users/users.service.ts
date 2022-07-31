@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { Prisma } from '@prisma/client';
+import { Paginate } from 'src/utils/paginate';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto, UpdateUserDto } from './dto';
+import { contains } from 'class-validator';
 
 @Injectable()
 export class UsersService {
-    constructor(private prisma: PrismaService) { }
+    constructor(private prisma: PrismaService, private paginate: Paginate) { }
 
     async createUser(data: CreateUserDto) {
         try {
@@ -27,21 +28,49 @@ export class UsersService {
                     phone_number: true,
                 }
             })
-            return newUser;
+            return {message: 'New user has created'};
         } catch (error) {
             return error
         }
     }
 
-    async getAll() {
-        const users = this.prisma.user.findMany({
+    async getAll(data:any) {
+        const query = {
+            where:{
+                OR:[
+                    {
+                        full_name: {contains:data.search || ''}
+                    },
+                    {
+                        username: {contains:data.search || ''}
+                    },
+                ]
+            },
+        }
+        let page = data.page || 1
+        let paginateDetails = {
+            page: page,
+            model: 'user',
+            query
+        }
+        let meta = await this.paginate.pagination(paginateDetails)
+        let skip:number = (page * meta.per_page) - meta.per_page
+        const users = await this.prisma.user.findMany({
             select: {
                 id: true,
                 full_name: true,
+                username: true,
+                active: true,
                 phone_number: true,
-            }
+            },
+            orderBy:{
+                id:'desc'
+            },
+           ...query,
+           skip,
+           take: +meta.per_page
         })
-        return users
+        return {data: users, meta}
     }
     async getOneById() {
         return this.prisma.user.findFirst()
@@ -73,6 +102,22 @@ export class UsersService {
             return error
         }
 
+    }
+    async updateActive(id:number){
+        try {
+            const user = await this.prisma.user.findFirst({where:{id}});
+            await this.prisma.user.update({
+                where:{
+                    id
+                },
+                data:{
+                    active: !user.active
+                }
+            })
+            return {message: 'User has updated'}
+        } catch (error) {
+            return Promise.reject(error)
+        }
     }
     async deleteUser(id: number) {
         await this.prisma.user.delete({
