@@ -24,6 +24,7 @@ model User {
   full_name     String
   password      String
   phone_number  String?
+  active        Boolean @default(true)
   created_at    DateTime? @default(now())
   update_at     DateTime? @updatedAt
   CreatedLesson Lesson[]

@@ -23,7 +23,8 @@ import { GroupStudentModule } from './group-student/group-student.module';
       },
     }),
     ConfigModule.forRoot({
-      envFilePath: '.env'
+      envFilePath: '.env',
+      isGlobal: true
     }),
     AuthModule,
     StudentsModule,

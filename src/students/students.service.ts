@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
+import { Paginate } from 'src/utils/paginate';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 
 @Injectable()
 export class StudentsService {
-  constructor(private prisma:PrismaService) { };
+  private paginate: Paginate
+  constructor(private prisma: PrismaService, pagination: Paginate) {
+    this.paginate = pagination
+  };
   async create(createStudentDto: CreateStudentDto) {
     try {
       const student = await this.prisma.student.create({
@@ -15,14 +19,14 @@ export class StudentsService {
           phone_number: createStudentDto.phone_number,
           birthday: new Date(createStudentDto.birthday),
           Region: {
-            connect:{id: createStudentDto.region_id}
+            connect: { id: createStudentDto.region_id }
           },
           Gender: {
-            connect:{id: createStudentDto.gender_id}
+            connect: { id: createStudentDto.gender_id }
           },
-          status:'waiting'
+          status: 'waiting'
         },
-        select:{
+        select: {
           id: true,
           first_name: true,
           last_name: true,
@@ -44,23 +48,18 @@ export class StudentsService {
       });
       return student;
     } catch (error) {
-      return {error: error.message};
+      return { error: error.message };
     }
   }
 
-  async findAll(data:any) {
+  async findAll(data: any) {
     try {
       let search = data.search || '';
       let status = data.status || undefined;
       let dates = data.dates ?? [];
-      const skip = +data.skip;
-      const take = +data.take;
-      const users = await this.prisma.student.findMany({
-        skip : skip ? skip : undefined,
-        take : take ? take : undefined,
+      let query = {
         where: {
-          status,
-          OR: [
+          status, OR: [
             {
               first_name: {
                 contains: search,
@@ -69,7 +68,7 @@ export class StudentsService {
             {
               last_name: {
                 contains: search,
-              }  
+              }
             }
           ],
           created_at: {
@@ -77,15 +76,30 @@ export class StudentsService {
             lt: dates[1] ? new Date(dates[1]) : undefined,
           },
         },
+      };
+      let page = data.page || 1
+      let paginateDetails = {
+        page: page,
+        model: 'student',
+        query
+      }
+    
+      let meta = await this.paginate.pagination(paginateDetails)
+      let skip: number = (page * meta.per_page) - meta.per_page
+      const users = await this.prisma.student.findMany({
+        ...query,
         orderBy: {
-          id:'desc'
+          id: 'desc'
         },
-        include:{
+        include: {
           Region: true,
           Gender: true
-        }
+        },
+        skip,
+        take: +meta.per_page
       })
-      return users;
+
+      return { data: users, meta};
     } catch (error) {
       return { error: error.message }
     }
@@ -97,7 +111,7 @@ export class StudentsService {
         where: {
           id
         },
-        include:{
+        include: {
           Region: true,
           Gender: true,
         }
@@ -119,14 +133,14 @@ export class StudentsService {
           birthday: new Date(updateStudentDto.birthday),
           region_id: updateStudentDto.region_id,
           gender_id: updateStudentDto.gender_id,
-          status:'waiting'
+          status: 'waiting'
         },
       })
       const user = this.prisma.student.findFirst({
         where: {
           id
         },
-        include:{
+        include: {
           Region: true,
           Gender: true
         }
@@ -140,7 +154,7 @@ export class StudentsService {
   async remove(id: number) {
     try {
       await this.prisma.student.delete({
-        where:{id}
+        where: { id }
       })
       return { message: "The student has deleted" };
     } catch (error) {

@@ -48,8 +48,7 @@ export class GroupsService {
                 }
               }
             },
-          ]
-            
+          ] 
         },
         include: {
           GroupLessonTime: {
